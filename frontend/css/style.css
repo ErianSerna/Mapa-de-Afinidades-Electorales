@@ -1,0 +1,810 @@
+/* =====================================================
+   ELECTORAL 2A — Mapa de Afinidades
+   Estética: Sala de guerra electoral — dark, preciso,
+   con acentos Colombia tricolor
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+/* ── Variables ────────────────────────────────────── */
+:root {
+  --bg-deep:     #08090d;
+  --bg-panel:    #0f1117;
+  --bg-card:     #151720;
+  --bg-hover:    #1c1f2e;
+  --border:      #252836;
+  --border-lite: #2e3248;
+
+  --text-primary: #e8eaf6;
+  --text-sec:     #8b90b0;
+  --text-dim:     #4a4f6e;
+
+  /* Colombia tricolor adaptado a dark */
+  --col-amarillo: #f5c842;
+  --col-azul:     #4a7fd4;
+  --col-rojo:     #e04e4e;
+
+  /* Tipo de nodo */
+  --c-candidato:  #f5c842;
+  --c-depto:      #4a7fd4;
+  --c-franja:     #52c27e;
+  --c-medio:      #e04e4e;
+
+  /* Comunidades (paleta amplia) */
+  --comm-0: #f5c842;
+  --comm-1: #4a7fd4;
+  --comm-2: #52c27e;
+  --comm-3: #e04e4e;
+  --comm-4: #c97ee8;
+  --comm-5: #f0854a;
+  --comm-6: #48d1cc;
+  --comm-7: #e8a0c0;
+
+  --radius: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+/* ── Reset & base ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+/* ── Layout principal ─────────────────────────────── */
+#app {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 280px 1fr 300px;
+  height: 100vh;
+}
+
+/* ── Header ───────────────────────────────────────── */
+header {
+  grid-column: 1 / -1;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 10;
+}
+
+.header-flag {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.flag-stripe {
+  width: 5px;
+  height: 28px;
+  border-radius: 2px;
+}
+.flag-stripe:nth-child(1) { background: var(--col-amarillo); height: 32px; }
+.flag-stripe:nth-child(2) { background: var(--col-azul); }
+.flag-stripe:nth-child(3) { background: var(--col-rojo); }
+
+header h1 {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+header h1 span { color: var(--col-amarillo); }
+
+.header-badge {
+  margin-left: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-sec);
+}
+
+/* Tabs de vista */
+.view-tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: 20px;
+}
+.tab-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-sec);
+  padding: 4px 12px;
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  transition: all .15s;
+}
+.tab-btn:hover, .tab-btn.active {
+  background: var(--col-amarillo);
+  border-color: var(--col-amarillo);
+  color: var(--bg-deep);
+}
+
+/* ── Panel izquierdo — Controles ──────────────────── */
+#panel-left {
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.ctrl-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.ctrl-group label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+
+.ctrl-group input[type="range"] {
+  width: 100%;
+  accent-color: var(--col-amarillo);
+  cursor: pointer;
+}
+
+.range-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--col-amarillo);
+  float: right;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkbox-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.checkbox-list input[type="checkbox"] {
+  accent-color: var(--col-azul);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.type-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+select {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-lite);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 6px 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-apply {
+  width: 100%;
+  background: var(--col-amarillo);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.btn-apply:hover { opacity: 0.88; }
+.btn-apply:active { transform: scale(0.98); }
+
+/* Leyenda */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+.legend-circle {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Canvas central ───────────────────────────────── */
+#panel-center {
+  position: relative;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+#graph-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Tooltip flotante */
+#tooltip {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border-lite);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  max-width: 220px;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+#tooltip.visible { opacity: 1; }
+#tooltip strong { color: var(--col-amarillo); display: block; margin-bottom: 4px; font-size: 13px; }
+#tooltip .tt-row { display: flex; justify-content: space-between; gap: 12px; color: var(--text-sec); }
+#tooltip .tt-val { color: var(--text-primary); font-family: 'Space Mono', monospace; }
+
+/* Overlay de carga */
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8,9,13,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  gap: 16px;
+}
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--col-amarillo);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-overlay p {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--text-sec);
+}
+
+/* Modo comparación */
+#compare-container {
+  display: none;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 1fr 1fr;
+}
+#compare-container.active { display: grid; }
+.compare-panel {
+  position: relative;
+  border-right: 1px solid var(--border);
+}
+.compare-panel:last-child { border-right: none; }
+.compare-label {
+  position: absolute;
+  top: 10px; left: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-lite);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--col-amarillo);
+  z-index: 10;
+}
+
+/* ── Panel derecho — Métricas ─────────────────────── */
+#panel-right {
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.metric-title {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  font-family: 'Space Mono', monospace;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--col-amarillo);
+  line-height: 1.1;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+/* Tarjeta comunidad */
+.comm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.comm-card:hover { border-color: var(--border-lite); background: var(--bg-hover); }
+.comm-card.selected { border-color: var(--col-amarillo); }
+
+.comm-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.comm-color {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.comm-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.comm-size {
+  margin-left: auto;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-sec);
+  background: var(--bg-deep);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.comm-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-sec);
+  margin-top: 4px;
+}
+.comm-row span:last-child {
+  color: var(--text-primary);
+  font-family: 'Space Mono', monospace;
+}
+
+/* Puentes */
+.bridge-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.bridge-rank {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 16px;
+}
+.bridge-info { flex: 1; }
+.bridge-name { font-size: 12px; font-weight: 700; }
+.bridge-type { font-size: 10px; color: var(--text-sec); margin-top: 1px; }
+.bridge-bc {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--col-rojo);
+}
+
+/* Scrollbar custom */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ── Responsive básico ────────────────────────────── */
+@media (max-width: 1100px) {
+  #app {
+    grid-template-columns: 240px 1fr 260px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MEJORAS INCREMENTALES — Reto 1, 2 y 3
+   Solo clases nuevas — no modifica nada existente
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Reto 1: Panel de simulación de puente ─────────────────── */
+#sim-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--col-rojo);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-top: 6px;
+  animation: slideIn .2s ease;
+}
+#sim-panel.visible { display: block !important; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sim-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sim-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--col-rojo);
+  flex: 1;
+}
+.sim-close {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  line-height: 1;
+}
+.sim-close:hover { color: var(--text-primary); }
+
+.sim-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sim-col {
+  background: var(--bg-deep);
+  border-radius: 6px;
+  padding: 10px;
+  border: 1px solid var(--border);
+}
+.sim-col-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.sim-stat {
+  font-family: 'Space Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+.sim-stat-label {
+  font-size: 10px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+.sim-delta {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 4px;
+}
+.sim-delta.pos  { background: rgba(82,194,126,0.15); color: #52c27e; }
+.sim-delta.neg  { background: rgba(224, 78, 78,0.15); color: var(--col-rojo); }
+.sim-delta.zero { background: rgba(255,255,255,0.05); color: var(--text-sec); }
+
+.sim-components {
+  margin-top: 6px;
+}
+.sim-comp-title {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+  font-family: 'Space Mono', monospace;
+}
+.sim-comp-item {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 7px 10px;
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+.sim-comp-item strong {
+  color: var(--col-amarillo);
+  font-family: 'Space Mono', monospace;
+}
+.sim-comp-names {
+  color: var(--text-sec);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.sim-comp-tipos {
+  margin-top: 3px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sim-tipo-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: 'Space Mono', monospace;
+}
+
+/* Botón de simulación en cada bridge-item */
+.btn-sim {
+  background: transparent;
+  border: 1px solid var(--col-rojo);
+  border-radius: 4px;
+  color: var(--col-rojo);
+  font-size: 9px;
+  font-family: 'Space Mono', monospace;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-sim:hover {
+  background: var(--col-rojo);
+  color: var(--bg-deep);
+}
+.btn-sim.active {
+  background: var(--col-rojo);
+  color: var(--bg-deep);
+}
+
+/* Nodo puente resaltado en el grafo */
+.bridge-pulse {
+  animation: bridgePulse 1.2s ease-in-out infinite;
+}
+@keyframes bridgePulse {
+  0%, 100% { stroke-width: 2; stroke-opacity: 0.9; }
+  50%       { stroke-width: 5; stroke-opacity: 1;   }
+}
+
+/* ── Reto 2: Panel de comparación de franjas ───────────────── */
+#franja-comparison-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-top: 10px;
+}
+
+.franja-bar-row {
+  margin-bottom: 10px;
+}
+.franja-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.franja-bar-name {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.franja-best-badge {
+  font-size: 9px;
+  font-family: 'Space Mono', monospace;
+  background: var(--col-amarillo);
+  color: var(--bg-deep);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-weight: 700;
+}
+.franja-bar-score {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-sec);
+}
+.franja-bar-track {
+  height: 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.franja-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.franja-bar-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 3px;
+}
+.franja-meta-item {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.franja-meta-item span {
+  color: var(--text-sec);
+  font-family: 'Space Mono', monospace;
+}
+
+/* Botón en la vista de franja para lanzar comparación */
+.btn-compare-franjas {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--col-azul);
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--col-azul);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.btn-compare-franjas:hover {
+  background: var(--col-azul);
+  color: var(--bg-deep);
+}
+
+/* ── Reto 3: Panel de métricas de configuración elegida ─────── */
+#selected-config-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--col-amarillo);
+  border-radius: var(--radius);
+  padding: 14px;
+  animation: slideIn .2s ease;
+}
+#selected-config-panel.visible { display: block !important; }
+
+.config-sel-header {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--col-amarillo);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.config-sel-header::before {
+  content: "★";
+  font-size: 12px;
+}
+
+.config-metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.config-metric-cell {
+  background: var(--bg-deep);
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+.config-metric-cell .val {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--col-amarillo);
+}
+.config-metric-cell .lbl {
+  font-size: 10px;
+  color: var(--text-sec);
+  margin-top: 2px;
+}
+
+.config-comm-list { margin-top: 6px; }
+.config-comm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+.config-comm-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.config-comm-name { flex: 1; }
+.config-comm-stats {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-sec);
+}
+
+/* Botones de selección de config en la vista compare */
+.btn-select-config {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-lite);
+  border-radius: 6px;
+  padding: 7px 18px;
+  color: var(--text-sec);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .15s;
+  z-index: 10;
+  white-space: nowrap;
+}
+.btn-select-config:hover {
+  border-color: var(--col-amarillo);
+  color: var(--col-amarillo);
+}
+.btn-select-config.selected {
+  background: var(--col-amarillo);
+  border-color: var(--col-amarillo);
+  color: var(--bg-deep);
+  font-weight: 700;
+}

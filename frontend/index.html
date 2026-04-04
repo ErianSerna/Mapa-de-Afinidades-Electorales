@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa de Afinidades Electorales — Colombia 2026</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- D3.js v7 desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════ -->
+  <header>
+    <div class="header-flag">
+      <div class="flag-stripe"></div>
+      <div class="flag-stripe"></div>
+      <div class="flag-stripe"></div>
+    </div>
+    <h1>Mapa de <span>Afinidades</span> Electorales</h1>
+
+    <div class="view-tabs">
+      <button class="tab-btn active" data-view="main">Red completa</button>
+      <button class="tab-btn" data-view="franja">Por franja</button>
+      <button class="tab-btn" data-view="compare">Comparar configs</button>
+    </div>
+
+    <div class="header-badge">Colombia · 8 mar 2026</div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL IZQUIERDO — Controles
+  ══════════════════════════════════════════════ -->
+  <aside id="panel-left">
+
+    <div>
+      <p class="section-label">Tipos de arista</p>
+      <div class="ctrl-group">
+        <div class="checkbox-list">
+          <label>
+            <input type="checkbox" class="tipo-arista-check" value="voto_candidato_departamento" checked>
+            <span class="type-dot" style="background:var(--c-depto)"></span>
+            Voto / Departamento
+          </label>
+          <label>
+            <input type="checkbox" class="tipo-arista-check" value="cobertura_medio_candidato" checked>
+            <span class="type-dot" style="background:var(--c-medio)"></span>
+            Cobertura Medio
+          </label>
+          <label>
+            <input type="checkbox" class="tipo-arista-check" value="afinidad_franja_candidato" checked>
+            <span class="type-dot" style="background:var(--c-candidato)"></span>
+            Afinidad Franja
+          </label>
+          <label>
+            <input type="checkbox" class="tipo-arista-check" value="alcance_medio_departamento">
+            <span class="type-dot" style="background:var(--c-franja)"></span>
+            Alcance Regional
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="section-label">Resolución Louvain</p>
+      <div class="ctrl-group">
+        <label>
+          Mayor resolución → más comunidades pequeñas
+          <span class="range-val" id="resolution-val">1.0</span>
+        </label>
+        <input type="range" id="resolution-slider"
+               min="0.3" max="2.0" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div>
+      <p class="section-label">Peso mínimo de arista</p>
+      <div class="ctrl-group">
+        <label>
+          Filtra conexiones débiles
+          <span class="range-val" id="min-peso-val">0</span>
+        </label>
+        <input type="range" id="min-peso-slider"
+               min="0" max="60" step="5" value="0">
+      </div>
+    </div>
+
+    <!-- Vista franja: selector de subtipo -->
+    <div id="franja-controls" style="display:none">
+      <p class="section-label">Tipo de franja demográfica</p>
+      <div class="ctrl-group">
+        <label>Subtipo a analizar</label>
+        <select id="franja-select">
+          <!-- poblado dinámicamente desde /api/meta -->
+        </select>
+      </div>
+      <!-- Reto 2: botón para lanzar comparación de todos los criterios -->
+      <button class="btn-compare-franjas" onclick="loadFranjaComparison()">
+        ⊞ Comparar todos los criterios
+      </button>
+    </div>
+
+    <button class="btn-apply" onclick="applyFilters()">
+      ▶ Aplicar filtros
+    </button>
+
+    <!-- Leyenda de tipos de nodo -->
+    <div>
+      <p class="section-label">Leyenda — tipo de nodo</p>
+      <div class="ctrl-group">
+        <div class="legend-item">
+          <div class="legend-circle" style="background:var(--c-candidato)"></div>
+          <span>Candidato presidencial</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-circle" style="background:var(--c-depto)"></div>
+          <span>Departamento</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-circle" style="background:var(--c-franja)"></div>
+          <span>Franja demográfica</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-circle" style="background:var(--c-medio)"></div>
+          <span>Medio de comunicación</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="section-label">Leyenda — color arista</p>
+      <div class="ctrl-group">
+        <div class="legend-item"><div class="legend-circle" style="background:#4a7fd4;border-radius:2px;width:16px;height:4px"></div><span>Voto / Departamento</span></div>
+        <div class="legend-item"><div class="legend-circle" style="background:#e04e4e;border-radius:2px;width:16px;height:4px"></div><span>Cobertura mediática</span></div>
+        <div class="legend-item"><div class="legend-circle" style="background:#f5c842;border-radius:2px;width:16px;height:4px"></div><span>Afinidad demográfica</span></div>
+        <div class="legend-item"><div class="legend-circle" style="background:#52c27e;border-radius:2px;width:16px;height:4px"></div><span>Alcance regional</span></div>
+      </div>
+    </div>
+
+  </aside>
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL CENTRAL — Canvas del grafo
+  ══════════════════════════════════════════════ -->
+  <main id="panel-center">
+
+    <!-- Vista principal -->
+    <div id="main-view" style="width:100%;height:100%">
+      <div id="graph-canvas" style="width:100%;height:100%"></div>
+    </div>
+
+    <!-- Vista por franja demográfica (Reto 2) -->
+    <div id="franja-view" style="display:none;width:100%;height:100%;position:relative;flex-direction:column">
+      <div id="graph-canvas-franja" style="width:100%;flex:1;min-height:0;height:100%"></div>
+      <!-- Reto 2: Panel de comparación de criterios — slide-up desde el fondo -->
+      <div id="franja-comparison-panel" style="
+        position:absolute;bottom:0;left:0;right:0;
+        max-height:230px;overflow-y:auto;
+        background:var(--bg-panel);
+        border-top:2px solid var(--col-azul);
+        padding:12px 16px;
+        display:none;
+        z-index:20;
+        box-shadow: 0 -8px 32px rgba(0,0,0,0.5);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-family:'Space Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--col-azul)">
+            ⊞ Comparación de criterios demográficos
+          </span>
+          <button onclick="document.getElementById('franja-comparison-panel').style.display='none'"
+            style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1">✕</button>
+        </div>
+        <div id="franja-bars"></div>
+      </div>
+    </div>
+
+    <!-- Vista de comparación (Reto 3) -->
+    <div id="compare-view" style="display:none;width:100%;height:100%;gap:0">
+      <div class="compare-panel" style="position:relative;flex:1;height:100%">
+        <div class="compare-label" id="compare-label-a">Config A</div>
+        <div id="graph-canvas-a" style="width:100%;height:100%"></div>
+        <button class="btn-select-config" id="btn-select-a" onclick="selectConfig('a')">
+          Seleccionar esta configuración
+        </button>
+      </div>
+      <div class="compare-panel" style="position:relative;flex:1;height:100%;border-left:1px solid var(--border)">
+        <div class="compare-label" id="compare-label-b">Config B</div>
+        <div id="graph-canvas-b" style="width:100%;height:100%"></div>
+        <button class="btn-select-config" id="btn-select-b" onclick="selectConfig('b')">
+          Seleccionar esta configuración
+        </button>
+      </div>
+    </div>
+
+    <!-- Tooltip flotante -->
+    <div id="tooltip"></div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" style="display:flex">
+      <div class="spinner"></div>
+      <p>Construyendo el grafo electoral…</p>
+    </div>
+  </main>
+
+
+  <!-- ══════════════════════════════════════════════
+       PANEL DERECHO — Métricas y resultados
+  ══════════════════════════════════════════════ -->
+  <aside id="panel-right">
+
+    <p class="section-label">Métricas de red</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="metric-card">
+        <div class="metric-title">Nodos</div>
+        <div class="metric-value" id="metric-nodes">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Aristas</div>
+        <div class="metric-value" id="metric-edges">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Comunidades</div>
+        <div class="metric-value" id="metric-comms">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Modularidad</div>
+        <div class="metric-value" id="metric-mod">—</div>
+        <div class="metric-sub">calidad de partición</div>
+      </div>
+    </div>
+
+    <!-- Comunidades detectadas -->
+    <p class="section-label" style="margin-top:4px">
+      Comunidades detectadas
+      <span style="color:var(--text-dim);font-size:10px">(clic para destacar)</span>
+    </p>
+    <div id="communities-list"></div>
+
+    <!-- Nodos puente (Reto 1) -->
+    <p class="section-label" style="margin-top:4px">
+      Nodos puente — Betweenness
+    </p>
+    <div id="bridges-list"></div>
+
+    <!-- Reto 1: Panel de simulación de eliminación de puente -->
+    <div id="sim-panel" style="display:none">
+      <div class="sim-header">
+        <span class="sim-title" id="sim-title">Simulación</span>
+        <button class="sim-close" onclick="closeSimPanel()" title="Cerrar">✕</button>
+      </div>
+      <div class="sim-compare">
+        <div class="sim-col">
+          <div class="sim-col-label">Antes</div>
+          <div class="sim-stat" id="sim-antes-comp">—</div>
+          <div class="sim-stat-label">componentes</div>
+          <div class="sim-stat" id="sim-antes-mod" style="font-size:14px;margin-top:6px">—</div>
+          <div class="sim-stat-label">modularidad</div>
+        </div>
+        <div class="sim-col">
+          <div class="sim-col-label">Después</div>
+          <div class="sim-stat" id="sim-despues-comp">—</div>
+          <div class="sim-stat-label">componentes</div>
+          <div class="sim-stat" id="sim-despues-mod" style="font-size:14px;margin-top:6px">—</div>
+          <div class="sim-stat-label">modularidad</div>
+          <div id="sim-deltas" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <!-- Interpretación textual -->
+      <div id="sim-interpretation" style="
+        margin:8px 0;padding:8px 10px;
+        background:var(--bg-deep);border-radius:5px;
+        font-size:11px;color:var(--text-sec);line-height:1.5;
+        border-left:3px solid var(--col-amarillo)">
+      </div>
+      <div class="sim-components">
+        <div class="sim-comp-title">Grupos resultantes</div>
+        <div id="sim-comp-list"></div>
+      </div>
+    </div>
+
+    <!-- Notas metodológicas -->
+    <div class="metric-card" style="margin-top:4px">
+      <div class="metric-title">Metodología</div>
+      <p style="font-size:11px;color:var(--text-sec);line-height:1.6;margin-top:6px">
+        Algoritmo <b style="color:var(--text-primary)">Louvain</b> para detección de comunidades.<br>
+        Nodos: candidatos, departamentos, franjas, medios.<br>
+        Peso de arista = % votos / índice de cobertura / afinidad demográfica.<br>
+        Tamaño ∝ centralidad de intermediación.
+      </p>
+    </div>
+
+    <!-- Reto 3: Panel de configuración seleccionada (aparece al elegir en compare) -->
+    <div id="selected-config-panel">
+      <div class="config-sel-header" id="config-sel-label">Configuración seleccionada</div>
+      <div class="config-metric-grid" id="config-metric-grid"></div>
+      <div class="config-comm-list" id="config-comm-list"></div>
+    </div>
+
+  </aside>
+
+</div><!-- #app -->
+
+<script src="/js/script.js"></script>
+<script>
+// Función llamada por el botón "Aplicar filtros"
+function applyFilters() {
+  const view = document.querySelector('.tab-btn.active')?.dataset.view || 'main';
+  if (view === 'main')    loadAndRender();
+  if (view === 'franja')  loadFranja();
+  if (view === 'compare') loadCompare();
+}
+
+// Muestra/oculta controles de franja según la vista
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const show = btn.dataset.view === 'franja';
+      document.getElementById('franja-controls').style.display = show ? 'block' : 'none';
+    });
+  });
+});
+</script>
+</body>
+</html>

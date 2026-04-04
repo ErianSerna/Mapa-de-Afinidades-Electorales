@@ -1,0 +1,7 @@
+flask>=3.0.0
+flask-cors>=4.0.0
+networkx>=3.2.1
+pandas>=2.1.0
+python-louvain>=0.16
+numpy>=1.26.0
+gunicorn>=21.2.0
