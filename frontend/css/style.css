@@ -8,40 +8,40 @@
 
 /* ── Variables ────────────────────────────────────── */
 :root {
-  --bg-deep:     #08090d;
-  --bg-panel:    #0f1117;
-  --bg-card:     #151720;
-  --bg-hover:    #1c1f2e;
-  --border:      #252836;
-  --border-lite: #2e3248;
+  --bg-deep:     #F8FAFC;
+  --bg-panel:    #FFFFFF;
+  --bg-card:     #f1f1f1;
+  --bg-hover:    #EEF2F7;
+  --border:      #9c9c9c;
+  --border-lite: #CBD5E1;
 
-  --text-primary: #e8eaf6;
-  --text-sec:     #8b90b0;
-  --text-dim:     #4a4f6e;
+  --text-primary: #1E293B;
+  --text-sec:     #3d3d3d;
+  --text-dim:     #3d3d3d;
 
-  /* Colombia tricolor adaptado a dark */
-  --col-amarillo: #f5c842;
-  --col-azul:     #4a7fd4;
-  --col-rojo:     #e04e4e;
+  /* Colombia tricolor institucional */
+  --col-amarillo: #FCD116;
+  --col-azul:     #003893;
+  --col-rojo:     #CE1126;
 
   /* Tipo de nodo */
-  --c-candidato:  #f5c842;
-  --c-depto:      #4a7fd4;
-  --c-franja:     #52c27e;
-  --c-medio:      #e04e4e;
+  --c-candidato:  #CE1126;
+  --c-depto:      #003893;
+  --c-franja:     #FCD116;
+  --c-medio:      #64748B;
 
   /* Comunidades (paleta amplia) */
-  --comm-0: #f5c842;
-  --comm-1: #4a7fd4;
-  --comm-2: #52c27e;
-  --comm-3: #e04e4e;
-  --comm-4: #c97ee8;
-  --comm-5: #f0854a;
-  --comm-6: #48d1cc;
-  --comm-7: #e8a0c0;
+  --comm-0: #003893;
+  --comm-1: #CE1126;
+  --comm-2: #FCD116;
+  --comm-3: #64748B;
+  --comm-4: #0055C4;
+  --comm-5: #E8453A;
+  --comm-6: #D4A90A;
+  --comm-7: #8496AD;
 
   --radius: 8px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
 
 /* ── Reset & base ─────────────────────────────────── */
@@ -121,14 +121,15 @@ header h1 span { color: var(--col-amarillo); }
   border-radius: 4px;
   color: var(--text-sec);
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-family: 'Space Mono', monospace;
+  font-weight: bold;
   cursor: pointer;
   transition: all .15s;
 }
 .tab-btn:hover, .tab-btn.active {
-  background: var(--col-amarillo);
-  border-color: var(--col-amarillo);
+  background: var(--col-azul);
+  border-color: var(--col-azul);
   color: var(--bg-deep);
 }
 
@@ -145,7 +146,8 @@ header h1 span { color: var(--col-amarillo); }
 
 .section-label {
   font-family: 'Space Mono', monospace;
-  font-size: 10px;
+  font-size: 14px;
+  font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -161,7 +163,7 @@ header h1 span { color: var(--col-amarillo); }
 
 .ctrl-group label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-sec);
   margin-bottom: 6px;
 }
@@ -290,7 +292,7 @@ select {
 #loading-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(8,9,13,0.85);
+  background: rgba(248,250,252,0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -386,6 +388,7 @@ select {
   padding: 12px;
   cursor: pointer;
   transition: border-color .15s, background .15s;
+  margin-bottom: 8px;
 }
 .comm-card:hover { border-color: var(--border-lite); background: var(--bg-hover); }
 .comm-card.selected { border-color: var(--col-amarillo); }
@@ -425,6 +428,7 @@ select {
 .comm-row span:last-child {
   color: var(--text-primary);
   font-family: 'Space Mono', monospace;
+  text-align: right;
 }
 
 /* Puentes */
@@ -549,9 +553,9 @@ select {
   display: inline-block;
   margin-top: 4px;
 }
-.sim-delta.pos  { background: rgba(82,194,126,0.15); color: #52c27e; }
-.sim-delta.neg  { background: rgba(224, 78, 78,0.15); color: var(--col-rojo); }
-.sim-delta.zero { background: rgba(255,255,255,0.05); color: var(--text-sec); }
+.sim-delta.pos  { background: rgba(0,56,147,0.1); color: #003893; }
+.sim-delta.neg  { background: rgba(206,17,38,0.1); color: var(--col-rojo); }
+.sim-delta.zero { background: rgba(100,116,139,0.1); color: var(--text-sec); }
 
 .sim-components {
   margin-top: 6px;

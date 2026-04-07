@@ -6,16 +6,16 @@
 const API = window.location.origin + "/api";
 
 const TIPO_COLOR = {
-  candidato:          "#f5c842",
-  departamento:       "#4a7fd4",
-  franja_demografica: "#52c27e",
-  medio:              "#e04e4e",
+  candidato:          "#CE1126",
+  departamento:       "#003893",
+  franja_demografica: "#FCD116",
+  medio:              "#64748B",
 };
 const TIPO_SHAPE_R = { candidato:14, departamento:10, franja_demografica:9, medio:11 };
 const COMM_COLORS  = [
-  "#f5c842","#4a7fd4","#52c27e","#e04e4e",
-  "#c97ee8","#f0854a","#48d1cc","#e8a0c0",
-  "#7fdb88","#f08cac","#72d4f0","#f5a742",
+  "#003893","#CE1126","#FCD116","#64748B",
+  "#0055C4","#E8453A","#D4A90A","#8496AD",
+  "#003893","#CE1126","#0055C4","#E8453A",
 ];
 
 const state = {
@@ -109,7 +109,7 @@ function renderGraph(data, canvasId, simKey) {
   const W = container.clientWidth || 800, H = container.clientHeight || 600;
   d3.select(`#${canvasId}`).selectAll("*").remove();
 
-  const svg = d3.select(`#${canvasId}`).append("svg").attr("width",W).attr("height",H)
+  const svg = d3.select(`#${canvasId}`).append("svg").attr("width","100%").attr("height","100%")
     .call(d3.zoom().scaleExtent([0.1,5]).on("zoom",(e)=>g.attr("transform",e.transform)));
   const g = svg.append("g");
   const maxP = d3.max(data.edges, d=>d.peso)||100;
@@ -140,8 +140,9 @@ function renderGraph(data, canvasId, simKey) {
 
   node.filter(d=>d.tipo==="candidato"||d.tipo==="medio")
     .append("text").attr("dy",d=>nodeRadius(d)+13)
-    .attr("text-anchor","middle").attr("font-size","9px")
+    .attr("text-anchor","middle").attr("font-size","12px")
     .attr("font-family","'Space Mono',monospace")
+    .attr("font-weight","bold")
     .attr("fill","var(--text-sec)")
     .text(d=>d.nombre.split(" ")[0]);
 
@@ -162,9 +163,9 @@ function renderGraph(data, canvasId, simKey) {
 function nodeRadius(d){ return (TIPO_SHAPE_R[d.tipo]||8) + (d.betweenness||0)*18; }
 function commColor(id){ if(id==null)return"#888"; return COMM_COLORS[id%COMM_COLORS.length]; }
 function edgeColor(tipo){
-  const m={voto_candidato_departamento:"#4a7fd4",cobertura_medio_candidato:"#e04e4e",
-           alcance_medio_departamento:"#52c27e",afinidad_franja_candidato:"#f5c842"};
-  return m[tipo]||"#555";
+  const m={voto_candidato_departamento:"#003893",cobertura_medio_candidato:"#64748B",
+           alcance_medio_departamento:"#94A3B8",afinidad_franja_candidato:"#CE1126"};
+  return m[tipo]||"#CBD5E1";
 }
 function dragStart(e,d){ if(!e.active) window._sim_main?.alphaTarget(0.3).restart(); d.fx=d.x;d.fy=d.y; }
 function dragged(e,d){ d.fx=e.x;d.fy=e.y; }
@@ -224,7 +225,7 @@ function updateMetricsPanel(metrics){
   const q=metrics.modularity||0;
   document.getElementById("metric-mod").textContent=q.toFixed(3);
   const qLabel=q>=0.3?"Alta":q>=0.15?"Moderada":"Baja";
-  const qColor=q>=0.3?"#52c27e":q>=0.15?"#f5c842":"#e04e4e";
+  const qColor=q>=0.3?"#003893":q>=0.15?"#D4A90A":"#CE1126";
   const sub=document.querySelector(".metric-sub");
   if(sub) sub.innerHTML=`calidad — <span style="color:${qColor}">${qLabel}</span>`;
 
@@ -244,7 +245,7 @@ function updateMetricsPanel(metrics){
       </div>
       <div class="comm-row"><span>Composición</span><span>${tipos}</span></div>
       <div class="comm-row"><span>Densidad</span>
-        <span style="color:${c.density>0.1?'#52c27e':'#f5c842'}">${c.density}</span></div>
+        <span style="color:${c.density>0.1?'#003893':'#D4A90A'}">${c.density}</span></div>
       <div class="comm-row"><span>Nodo puente</span>
         <span style="color:var(--col-rojo)">${c.bridge_nombre}</span></div>`;
     card.addEventListener("click",()=>{
@@ -377,11 +378,11 @@ async function loadFranjaComparison(){
 function renderFranjaBars(criterios){
   const bars=document.getElementById("franja-bars");
   bars.innerHTML="";
-  const BAR_COLORS=["#f5c842","#52c27e","#4a7fd4","#c97ee8","#f0854a"];
+  const BAR_COLORS=["#003893","#CE1126","#FCD116","#0055C4","#64748B"];
   criterios.forEach((c,i)=>{
     const isBest=i===0, color=BAR_COLORS[i%BAR_COLORS.length];
     const interp=c.score_claridad>=0.25?"Partición muy clara":c.score_claridad>=0.15?"Partición moderada":"Partición débil";
-    const interpColor=c.score_claridad>=0.25?"#52c27e":c.score_claridad>=0.15?"#f5c842":"#e04e4e";
+    const interpColor=c.score_claridad>=0.25?"#003893":c.score_claridad>=0.15?"#D4A90A":"#CE1126";
     const div=document.createElement("div");
     div.className="franja-bar-row"; div.style.cursor="pointer";
     div.title=`Clic para analizar criterio: ${c.subtipo}`;
@@ -432,7 +433,7 @@ function renderSelectedConfigPanel(config,which){
   panel.classList.add("visible");
   document.getElementById("config-sel-label").textContent=`Config ${which.toUpperCase()} seleccionada`;
   const q=metrics.modularity, qLabel=q>=0.3?"Alta":q>=0.15?"Mod.":"Baja";
-  const qColor=q>=0.3?"#52c27e":q>=0.15?"#f5c842":"#e04e4e";
+  const qColor=q>=0.3?"#003893":q>=0.15?"#D4A90A":"#CE1126";
   document.getElementById("config-metric-grid").innerHTML=`
     <div class="config-metric-cell"><div class="val">${metrics.n_nodes}</div><div class="lbl">Nodos</div></div>
     <div class="config-metric-cell"><div class="val">${metrics.n_edges}</div><div class="lbl">Aristas</div></div>
