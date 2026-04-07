@@ -268,7 +268,7 @@ select {
 
 /* Tooltip flotante */
 #tooltip {
-  position: absolute;
+  position: fixed;
   background: var(--bg-card);
   border: 1px solid var(--border-lite);
   border-radius: var(--radius);

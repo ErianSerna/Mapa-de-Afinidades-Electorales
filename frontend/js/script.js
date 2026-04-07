@@ -194,7 +194,7 @@ function showTooltip(e,d){
 }
 function moveTooltip(e){
   const tt=document.getElementById("tooltip");
-  tt.style.left=(e.clientX+14)+"px"; tt.style.top=(e.clientY-10)+"px";
+  tt.style.left=(e.clientX+20)+"px"; tt.style.top=(e.clientY-10)+"px";
 }
 function hideTooltip(){ document.getElementById("tooltip").classList.remove("visible"); }
 function shortenVal(v){ if(!v)return"—"; const s=String(v); return s.length>22?s.slice(0,20)+"…":s; }
