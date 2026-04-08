@@ -38,6 +38,28 @@
   <aside id="panel-left">
 
     <div>
+      <p class="section-label">Preguntas de análisis</p>
+      <div class="ctrl-group">
+        <select id="preset-select" onchange="applyPreset(this.value)">
+          <option value="">— Selecciona una pregunta —</option>
+          <optgroup label="Análisis base">
+            <option value="dominio_regional">¿Quién domina por departamento?</option>
+            <option value="ecosistema_mediatico">¿Quién tiene más cobertura mediática?</option>
+            <option value="fragmentacion_demografica">¿Cómo se fragmenta por edad?</option>
+            <option value="nodos_criticos">¿Cuáles son los nodos más críticos?</option>
+          </optgroup>
+          <optgroup label="Análisis personalizado">
+            <option value="custom_1">¿Qué departamentos tienen un perfil de votación similar entre sí?</option>
+            <option value="custom_2">¿Los grupos coinciden con regiones geográficas o con bloques ideológicos?</option>
+            <option value="custom_3">¿Qué medios comparten ecosistema de influencia con qué candidatos?</option>
+            <option value="custom_4">¿Qué franja demográfica es la más homogénea en sus preferencias electorales?</option>
+            <option value="custom_5">¿Qué tan pronunciada es la separación entre los grupos encontrados?</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <div>
       <p class="section-label">Tipos de arista</p>
       <div class="ctrl-group">
         <div class="checkbox-list">

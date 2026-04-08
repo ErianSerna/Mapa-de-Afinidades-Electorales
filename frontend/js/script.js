@@ -23,6 +23,116 @@ const state = {
   bridgeData:null, metaData:null, selectedComm:null, activeBridgeId:null,
 };
 
+// ══════ PRESETS DE ANÁLISIS ══════════════════════════════════════
+// ── Presets base (4 preguntas del análisis) ──────────────────────
+const PRESETS = {
+  dominio_regional: {
+    label: "¿Quién domina por departamento?",
+    view: "main",
+    resolution: 0.7,
+    min_peso: 30,
+    tipos: ["voto_candidato_departamento"],
+  },
+  ecosistema_mediatico: {
+    label: "¿Qué candidatos tienen más cobertura mediática?",
+    view: "main",
+    resolution: 1.0,
+    min_peso: 0,
+    tipos: ["cobertura_medio_candidato", "voto_candidato_departamento"],
+  },
+  fragmentacion_demografica: {
+    label: "¿Cómo se fragmenta la red por franja de edad?",
+    view: "franja",
+    resolution: 1.4,
+    min_peso: 0,
+    tipos: ["afinidad_franja_candidato"],
+    franja_subtipo: "edad",
+  },
+  nodos_criticos: {
+    label: "¿Cuáles son los nodos más críticos de la red?",
+    view: "main",
+    resolution: 1.0,
+    min_peso: 10,
+    tipos: ["voto_candidato_departamento","cobertura_medio_candidato","afinidad_franja_candidato","alcance_medio_departamento"],
+  },
+
+  // ── PRESETS PERSONALIZADOS ────────────────────────────────────
+  // Configura aquí las 5 preguntas adicionales que necesites.
+  // Campos disponibles:
+  //   label          : texto que aparece en el selector (obligatorio)
+  //   view           : "main" | "franja" | "compare"
+  //   resolution     : número entre 0.3 y 2.0 (tamaño de comunidades)
+  //   min_peso       : número entre 0 y 100 (filtra aristas débiles)
+  //   tipos          : array con uno o más de:
+  //                    "voto_candidato_departamento"
+  //                    "cobertura_medio_candidato"
+  //                    "afinidad_franja_candidato"
+  //                    "alcance_medio_departamento"
+  //   franja_subtipo : solo si view="franja" — subtipo demográfico a preseleccionar
+  // ─────────────────────────────────────────────────────────────
+  custom_1: {
+    label: "¿Qué departamentos tienen un perfil de votación similar entre sí?",
+    view: "main",
+    resolution: 1.0,
+    min_peso: 20,
+    tipos: ["voto_candidato_departamento"],
+  },
+  custom_2: {
+    label: "¿Los grupos coinciden con regiones geográficas o con bloques ideológicos?",
+    view: "main",
+    resolution: 1.0,
+    min_peso: 0,
+    tipos: ["voto_candidato_departamento","afinidad_franja_candidato"],
+  },
+  custom_3: {
+    label: " ¿Qué medios comparten ecosistema de influencia con qué candidatos?",
+    view: "main",
+    resolution: 0.8,
+    min_peso: 30,
+    tipos: ["cobertura_medio_candidato", "alcance_medio_departamento"],
+  },
+  custom_4: {
+    label: "¿Qué franja demográfica es la más homogénea en sus preferencias electorales?",
+    view: "franja",
+    resolution: 1.0,
+    min_peso: 0,
+    tipos: ["afinidad_franja_candidato"],
+    trigger_franja_comparison: true,
+  },
+  custom_5: {
+    label: "¿Qué tan pronunciada es la separación entre los grupos encontrados?",
+    view: "main",
+    resolution: 1.0,
+    min_peso: 0,
+    tipos: ["voto_candidato_departamento","cobertura_medio_candidato","afinidad_franja_candidato","alcance_medio_departamento"],
+  },
+};
+
+// ══════ APLICAR PRESET ══════════════════════════════════════════
+function applyPreset(key) {
+  if (!key) return;
+  const p = PRESETS[key];
+  if (!p) return;
+
+  document.getElementById("resolution-slider").value = p.resolution;
+  document.getElementById("resolution-val").textContent = p.resolution.toFixed(1);
+  document.getElementById("min-peso-slider").value = p.min_peso;
+  document.getElementById("min-peso-val").textContent = p.min_peso;
+
+  document.querySelectorAll(".tipo-arista-check").forEach(cb => {
+    cb.checked = p.tipos.includes(cb.value);
+  });
+
+  if (p.franja_subtipo) {
+    const sel = document.getElementById("franja-select");
+    if (sel) sel.value = p.franja_subtipo;
+  }
+
+  switchView(p.view);
+
+  if (p.trigger_franja_comparison) loadFranjaComparison();
+}
+
 // ══════ INICIALIZACIÓN ══════════════════════════════════════════
 async function init() {
   await loadMeta();
@@ -177,14 +287,28 @@ function showEmptyState(id,msg){
 }
 
 // ══════ TOOLTIP ══════════════════════════════════════════════════
+function tooltipColor(tipo){
+  const override = { franja_demografica: "#8A6F00" };
+  return override[tipo] || TIPO_COLOR[tipo] || "#888";
+}
+function tooltipCommColor(id){
+  const c = commColor(id);
+  return (c === "#FCD116" || c === "#D4A90A") ? "#8A6F00" : c;
+}
 function showTooltip(e,d){
+  const tc  = tooltipColor(d.tipo);
+  const cc  = tooltipCommColor(d.community);
+  const dot = TIPO_COLOR[d.tipo] || "#888";
   const tt=document.getElementById("tooltip");
   tt.innerHTML=`
     <strong>${d.nombre}</strong>
     <div class="tt-row"><span>Tipo</span>
-      <span class="tt-val" style="color:${TIPO_COLOR[d.tipo]||'#888'}">${d.tipo}</span></div>
+      <span class="tt-val">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dot};border:1.5px solid ${tc};margin-right:4px;vertical-align:middle"></span>
+        <span style="color:${tc}">${d.tipo}</span>
+      </span></div>
     <div class="tt-row"><span>Comunidad</span>
-      <span class="tt-val" style="color:${commColor(d.community)}">#${d.community}</span></div>
+      <span class="tt-val" style="color:${cc}">#${d.community}</span></div>
     <div class="tt-row"><span>Betweenness</span>
       <span class="tt-val">${((d.betweenness||0)*100).toFixed(1)}%</span></div>
     <div class="tt-row"><span>${d.atributo_1_label||"attr1"}</span>
