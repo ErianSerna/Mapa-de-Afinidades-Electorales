@@ -291,7 +291,7 @@ Un Q cercano a 1 indica partición de alta calidad. El dataset obtiene Q ≈ 0.2
 | Visualización | D3.js | 7.8 |
 | HTTP | fetch API (nativa) | — |
 | CORS | flask-cors | 4.0 |
-| gunicorn | 21.2.0 |
+| gunicorn | -  | 21.2.0
 ---
 
 ## Notas de desarrollo
