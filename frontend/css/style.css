@@ -935,3 +935,91 @@ path.map-dept:hover {
   font-size: 10px;
   font-weight: 700;
 }
+
+/* ══════════════════════════════════════════════════
+   COMUNIDADES — sección colapsable densidad 0
+══════════════════════════════════════════════════ */
+.comm-zero-wrap {
+  margin-top: 4px;
+}
+.comm-zero-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-lite);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: left;
+  letter-spacing: .04em;
+  transition: border-color .15s, color .15s;
+}
+.comm-zero-toggle:hover {
+  border-color: var(--col-azul);
+  color: var(--col-azul);
+}
+.comm-zero-caret {
+  font-size: 8px;
+  transition: transform .15s;
+  flex-shrink: 0;
+}
+.comm-zero-count {
+  margin-left: auto;
+  background: var(--border-lite);
+  color: var(--text-sec);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.comm-zero-list {
+  margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════
+   PANEL IZQUIERDO — Equipo / LinkedIn
+══════════════════════════════════════════════════ */
+.team-section {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-lite);
+}
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text-sec);
+  font-size: 11px;
+  font-family: 'Syne', sans-serif;
+  transition: background .14s, color .14s;
+  border: 1px solid transparent;
+}
+.team-member:hover {
+  background: #E8F0FE;
+  color: #0A66C2;
+  border-color: #BED3F8;
+}
+.li-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: #0A66C2;
+  opacity: .85;
+}
+.team-member:hover .li-icon {
+  opacity: 1;
+}

@@ -356,7 +356,11 @@ function updateMetricsPanel(metrics){
   const container=document.getElementById("communities-list");
   container.innerHTML="";
   const comms=metrics.communities||{};
-  Object.values(comms).sort((a,b)=>b.size-a.size).forEach(c=>{
+  const sorted=Object.values(comms).sort((a,b)=>b.size-a.size);
+  const active=sorted.filter(c=>c.density>0);
+  const empty =sorted.filter(c=>c.density===0);
+
+  function makeCommCard(c){
     const color=COMM_COLORS[c.id%COMM_COLORS.length];
     const tipos=Object.entries(c.tipos).map(([t,n])=>`${n} ${t.replace("_demografica","")}`).join(", ");
     const card=document.createElement("div");
@@ -378,8 +382,32 @@ function updateMetricsPanel(metrics){
       document.querySelectorAll(".comm-card").forEach(el=>
         el.classList.toggle("selected",el.dataset.comm==state.selectedComm));
     });
-    container.appendChild(card);
-  });
+    return card;
+  }
+
+  active.forEach(c=>container.appendChild(makeCommCard(c)));
+
+  if(empty.length>0){
+    const wrap=document.createElement("div");
+    wrap.className="comm-zero-wrap";
+    wrap.innerHTML=`
+      <button class="comm-zero-toggle" aria-expanded="false">
+        <span class="comm-zero-caret">▶</span>
+        Aisladas · densidad&nbsp;0
+        <span class="comm-zero-count">${empty.length}</span>
+      </button>
+      <div class="comm-zero-list"></div>`;
+    const listEl=wrap.querySelector(".comm-zero-list");
+    listEl.style.display="none";
+    empty.forEach(c=>listEl.appendChild(makeCommCard(c)));
+    wrap.querySelector(".comm-zero-toggle").addEventListener("click",function(){
+      const open=this.getAttribute("aria-expanded")==="true";
+      this.setAttribute("aria-expanded",String(!open));
+      this.querySelector(".comm-zero-caret").textContent=open?"▶":"▼";
+      listEl.style.display=open?"none":"block";
+    });
+    container.appendChild(wrap);
+  }
 }
 
 // ══════ RETO 1 — PANEL DE PUENTES + SIMULACIÓN ═══════════════════
