@@ -833,3 +833,105 @@ select {
   color: var(--bg-deep);
   font-weight: 700;
 }
+
+/* ══════════════════════════════════════════════════
+   MAPA COLOMBIA
+══════════════════════════════════════════════════ */
+
+/* View flex container */
+#mapa-view {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-deep);
+  position: relative;
+}
+
+/* Canvas SVG area */
+#mapa-canvas {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+#mapa-canvas svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+#mapa-canvas svg:active { cursor: grabbing; }
+
+/* Department paths */
+path.map-dept {
+  transition: fill-opacity .18s, stroke-width .12s;
+  cursor: pointer;
+}
+path.map-dept:hover {
+  filter: brightness(1.12) drop-shadow(0 0 4px rgba(0,0,0,0.25));
+}
+
+/* Map legend (SVG overlay) */
+.map-legend rect {
+  transition: none;
+}
+
+/* Error message */
+.map-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--col-rojo);
+  padding: 24px;
+  text-align: center;
+}
+
+/* Bottom subregion bar */
+#mapa-subregion-bar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--bg-panel);
+  border-top: 2px solid var(--border);
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  min-height: 38px;
+}
+#mapa-subregion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Individual subregion chip */
+.mapa-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-lite);
+  border-radius: 20px;
+  padding: 3px 10px 3px 0;
+  white-space: nowrap;
+}
+.chip-region {
+  padding: 2px 7px;
+  border-radius: 20px 0 0 20px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-sec);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.chip-arrow {
+  font-size: 10px;
+  font-weight: 700;
+}

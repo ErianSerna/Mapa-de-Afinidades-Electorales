@@ -602,17 +602,374 @@ function getParams(){
       "voto_candidato_departamento,cobertura_medio_candidato,afinidad_franja_candidato,alcance_medio_departamento" };
 }
 
+// ══════ MAPA DE COLOMBIA ════════════════════════════════════════
+
+const COLOMBIA_GEOJSON_URL =
+  "https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json";
+
+const CANDIDATE_COLORS = {
+  CAN_01: "#1A56DB",  // Paloma Valencia  — Centro Democrático  (azul institucional)
+  CAN_02: "#E02424",  // Iván Cepeda      — Pacto Histórico     (rojo)
+  CAN_03: "#7E3AF2",  // Claudia López    — Centro              (púrpura)
+  CAN_04: "#057A55",  // Roy Barreras     — Centro-izq          (verde)
+  CAN_05: "#D97706",  // Juan D. Oviedo   — Centro-der          (ámbar)
+  CAN_06: "#0694A2",  // Sergio Fajardo   — Independiente       (cian)
+};
+
+const CANDIDATE_NAMES = {
+  CAN_01:"Paloma Valencia", CAN_02:"Iván Cepeda",
+  CAN_03:"Claudia López",   CAN_04:"Roy Barreras",
+  CAN_05:"J.D. Oviedo",     CAN_06:"Sergio Fajardo",
+};
+
+const SUBREGION_COLORS = {
+  "Caribe":    "#0EA5E9",  // azul cielo
+  "Andina":    "#84CC16",  // verde lima
+  "Pacífico":  "#F97316",  // naranja
+  "Centro":    "#8B5CF6",  // violeta
+  "Orinoquía": "#F59E0B",  // amarillo ámbar
+  "Amazonía":  "#10B981",  // esmeralda
+  "Exterior":  "#94A3B8",  // gris
+};
+
+// Normaliza nombre de departamento: mayúsculas, sin tildes, sin guiones
+function normDepName(s) {
+  return (s || "")
+    .toUpperCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Nombre GeoJSON → DEP_XX
+const DEPT_GEO_MAP = {
+  "BOGOTA":                            "DEP_01",
+  "BOGOTA D.C.":                       "DEP_01",
+  "BOGOTA D C":                        "DEP_01",
+  "BOGOTA DC":                         "DEP_01",
+  "SANTAFE DE BOGOTA D.C.":            "DEP_01",
+  "ANTIOQUIA":                         "DEP_02",
+  "VALLE DEL CAUCA":                   "DEP_03",
+  "VALLE":                             "DEP_03",
+  "ATLANTICO":                         "DEP_04",
+  "CUNDINAMARCA":                      "DEP_05",
+  "SANTANDER":                         "DEP_06",
+  "BOLIVAR":                           "DEP_07",
+  "NARINO":                            "DEP_08",
+  "NARINO ":                           "DEP_08",
+  "CORDOBA":                           "DEP_09",
+  "NORTE DE SANTANDER":                "DEP_10",
+  "HUILA":                             "DEP_11",
+  "TOLIMA":                            "DEP_12",
+  "CAUCA":                             "DEP_13",
+  "META":                              "DEP_14",
+  "CESAR":                             "DEP_15",
+  "RISARALDA":                         "DEP_16",
+  "MAGDALENA":                         "DEP_17",
+  "BOYACA":                            "DEP_18",
+  "CALDAS":                            "DEP_19",
+  "LA GUAJIRA":                        "DEP_20",
+  "SUCRE":                             "DEP_21",
+  "CHOCO":                             "DEP_22",
+  "QUINDIO":                           "DEP_23",
+  "PUTUMAYO":                          "DEP_24",
+  "CAQUETA":                           "DEP_25",
+  "ARAUCA":                            "DEP_26",
+  "CASANARE":                          "DEP_27",
+  "AMAZONAS":                          "DEP_28",
+  "GUAINIA":                           "DEP_29",
+  "VICHADA":                           "DEP_30",
+  "VAUPES":                            "DEP_31",
+  "SAN ANDRES":                        "DEP_32",
+  "SAN ANDRES PROVIDENCIA Y SANTA CATALINA": "DEP_32",
+  "ARCHIPIELAGO DE SAN ANDRES PROVIDENCIA Y SANTA CATALINA": "DEP_32",
+};
+
+let _mapaCache = null;   // { nodes, edges, geoData }
+let _mapaSelectedDept = null;
+
+async function loadMapaColombia() {
+  if (_mapaCache) { renderColombiaMap(); return; }
+  showLoading(true);
+  try {
+    const qs = new URLSearchParams({
+      resolution: 1.0, min_peso: 0,
+      tipos_arista: "voto_candidato_departamento",
+    }).toString();
+    const [gR, geoR] = await Promise.all([
+      fetch(`${API}/graph?${qs}`),
+      fetch(COLOMBIA_GEOJSON_URL),
+    ]);
+    const graphData = await gR.json();
+    const geoData   = await geoR.json();
+    _mapaCache = { nodes: graphData.nodes, edges: graphData.edges, geoData };
+    renderColombiaMap();
+  } catch(e) {
+    console.error("Error cargando mapa:", e);
+    const c = document.getElementById("mapa-canvas");
+    if (c) c.innerHTML = `<div class="map-error">No se pudo cargar el mapa. Verifica tu conexión.</div>`;
+  } finally { showLoading(false); }
+}
+
+// Retorna { depId: { node, votes:{canId:pct}, dominantCan, region } }
+function buildDeptDominance(nodes, edges) {
+  const nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
+
+  const deptData = {};
+  nodes.filter(n => n.tipo === "departamento").forEach(n => {
+    deptData[n.id] = { node: n, votes: {}, dominantCan: null, region: n.region || "" };
+  });
+
+  edges
+    .filter(e => e.tipo === "voto_candidato_departamento")
+    .forEach(e => {
+      const src = e.source, tgt = e.target;
+      if (deptData[tgt]) deptData[tgt].votes[src] = e.peso;
+    });
+
+  Object.values(deptData).forEach(d => {
+    const sorted = Object.entries(d.votes).sort((a, b) => b[1] - a[1]);
+    if (sorted.length) d.dominantCan = sorted[0][0];
+  });
+  return deptData;
+}
+
+// Calcula para cada subregión cuál candidato domina más departamentos
+function buildSubregionAffinity(deptData) {
+  const regionTally = {};   // {region: {canId: count}}
+  Object.values(deptData).forEach(d => {
+    if (!d.dominantCan || !d.region || d.region === "Exterior") return;
+    if (!regionTally[d.region]) regionTally[d.region] = {};
+    regionTally[d.region][d.dominantCan] = (regionTally[d.region][d.dominantCan] || 0) + 1;
+  });
+  const result = {};
+  Object.entries(regionTally).forEach(([reg, tally]) => {
+    const sorted = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+    result[reg] = { dominantCan: sorted[0][0], tally };
+  });
+  return result;
+}
+
+function getGeoFeatureName(feature) {
+  const p = feature.properties;
+  return p.NOMBRE_DPT || p.nombre_dpt || p.DPTO_CNMBR || p.name || p.NAME || p.dep_name || "";
+}
+
+function renderColombiaMap() {
+  if (!_mapaCache) return;
+  const { nodes, edges, geoData } = _mapaCache;
+  const container = document.getElementById("mapa-canvas");
+  if (!container) return;
+
+  d3.select("#mapa-canvas").selectAll("*").remove();
+
+  const W = container.clientWidth  || 800;
+  const H = container.clientHeight || 580;
+
+  const deptData = buildDeptDominance(nodes, edges);
+  const subregAff = buildSubregionAffinity(deptData);
+
+  // Mapa de GeoJSON nombre → DEP_XX
+  const geoNameToDepId = {};
+  geoData.features.forEach(f => {
+    const raw  = getGeoFeatureName(f);
+    const norm = normDepName(raw);
+    const id   = DEPT_GEO_MAP[norm];
+    if (id) geoNameToDepId[raw] = id;
+  });
+
+  // SVG principal
+  const svg = d3.select("#mapa-canvas").append("svg")
+    .attr("width", "100%").attr("height", "100%");
+
+  const zoomG = svg.append("g").attr("class", "zoom-root");
+
+  svg.call(
+    d3.zoom().scaleExtent([0.5, 12]).on("zoom", e => zoomG.attr("transform", e.transform))
+  );
+
+  // Proyección que cabe en el canvas
+  const projection = d3.geoMercator().fitSize([W, H], geoData);
+  const pathGen    = d3.geoPath().projection(projection);
+
+  // ── Departamentos ──────────────────────────────────────
+  const deptGroup = zoomG.append("g").attr("class", "dept-group");
+
+  const paths = deptGroup.selectAll("path.map-dept")
+    .data(geoData.features)
+    .join("path")
+    .attr("class", "map-dept")
+    .attr("d", pathGen)
+    .attr("fill", f => {
+      const raw    = getGeoFeatureName(f);
+      const norm   = normDepName(raw);
+      const depId  = DEPT_GEO_MAP[norm];
+      const d      = depId && deptData[depId];
+      if (!d || !d.dominantCan) return "#CBD5E1";
+      return CANDIDATE_COLORS[d.dominantCan] || "#CBD5E1";
+    })
+    .attr("fill-opacity", 0.78)
+    .attr("stroke", "#FFFFFF")
+    .attr("stroke-width", 0.6)
+    .on("mouseover", (ev, f) => {
+      d3.select(ev.currentTarget)
+        .attr("stroke", "#1E293B").attr("stroke-width", 1.8).attr("fill-opacity", 1);
+      showMapTooltip(ev, f, deptData);
+    })
+    .on("mousemove", ev => moveTooltip(ev))
+    .on("mouseout", (ev, f) => {
+      const raw   = getGeoFeatureName(f);
+      const norm  = normDepName(raw);
+      const depId = DEPT_GEO_MAP[norm];
+      const isSel = _mapaSelectedDept === depId;
+      d3.select(ev.currentTarget)
+        .attr("stroke", isSel ? "#1E293B" : "#FFFFFF")
+        .attr("stroke-width", isSel ? 2.5 : 0.6)
+        .attr("fill-opacity", 0.78);
+      hideTooltip();
+    })
+    .on("click", (ev, f) => {
+      const raw   = getGeoFeatureName(f);
+      const norm  = normDepName(raw);
+      const depId = DEPT_GEO_MAP[norm];
+      _mapaSelectedDept = _mapaSelectedDept === depId ? null : depId;
+      updateMapSelection(depId, deptData);
+    });
+
+  // ── Etiquetas de departamentos grandes ──────────────────
+  const labelGroup = zoomG.append("g").attr("class", "dept-label-group");
+  const MIN_AREA_PX = 1000;
+  geoData.features.forEach(f => {
+    const area = pathGen.area(f);
+    if (area < MIN_AREA_PX) return;
+    const [cx, cy] = pathGen.centroid(f);
+    if (isNaN(cx) || isNaN(cy)) return;
+    const raw   = getGeoFeatureName(f);
+    const norm  = normDepName(raw);
+    const depId = DEPT_GEO_MAP[norm];
+    const dName = depId && deptData[depId] ? deptData[depId].node.nombre : "";
+    const short = dName.length > 12 ? dName.split(" ")[0] : dName;
+    if (!short) return;
+    labelGroup.append("text")
+      .attr("x", cx).attr("y", cy)
+      .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+      .attr("font-size", "7px")
+      .attr("font-family", "'Space Mono', monospace")
+      .attr("font-weight", "700")
+      .attr("fill", "#1E293B")
+      .attr("fill-opacity", 0.7)
+      .attr("pointer-events", "none")
+      .text(short);
+  });
+
+  // ── Leyenda candidatos ─────────────────────────────────
+  const legendX = W - 200, legendY = 16;
+  const legendG = svg.append("g").attr("class", "map-legend").attr("transform", `translate(${legendX},${legendY})`);
+  legendG.append("rect")
+    .attr("width", 185).attr("height", Object.keys(CANDIDATE_NAMES).length * 20 + 30)
+    .attr("rx", 6).attr("fill", "rgba(255,255,255,0.92)").attr("stroke", "#CBD5E1").attr("stroke-width", 1);
+  legendG.append("text")
+    .attr("x", 10).attr("y", 16)
+    .attr("font-size", "9px").attr("font-family", "'Space Mono',monospace")
+    .attr("text-transform", "uppercase").attr("fill", "#64748B")
+    .attr("font-weight", "700").attr("letter-spacing", ".08em")
+    .text("CANDIDATO DOMINANTE");
+  Object.entries(CANDIDATE_NAMES).forEach(([id, name], i) => {
+    const gy = 28 + i * 20;
+    legendG.append("rect")
+      .attr("x", 10).attr("y", gy).attr("width", 13).attr("height", 13)
+      .attr("rx", 2).attr("fill", CANDIDATE_COLORS[id] || "#888").attr("fill-opacity", 0.85);
+    legendG.append("text")
+      .attr("x", 28).attr("y", gy + 10)
+      .attr("font-size", "10px").attr("font-family", "'Syne',sans-serif")
+      .attr("fill", "#1E293B").text(name);
+  });
+
+  // ── Panel inferior: afinidad subregional ──────────────
+  const chips = document.getElementById("mapa-subregion-chips");
+  if (chips) {
+    chips.innerHTML = "";
+    const SUBREGION_ORDER = ["Caribe", "Andina", "Pacífico", "Centro", "Orinoquía", "Amazonía"];
+    SUBREGION_ORDER.forEach(reg => {
+      const aff = subregAff[reg];
+      if (!aff) return;
+      const canColor = CANDIDATE_COLORS[aff.dominantCan] || "#888";
+      const canName  = CANDIDATE_NAMES[aff.dominantCan]  || "?";
+      const regColor = SUBREGION_COLORS[reg]  || "#888";
+      const chip = document.createElement("div");
+      chip.className = "mapa-chip";
+      chip.innerHTML = `
+        <span class="chip-region" style="border-left:3px solid ${regColor}">${reg}</span>
+        <span class="chip-arrow" style="color:${canColor}">▶ ${canName}</span>`;
+      chips.appendChild(chip);
+    });
+  }
+}
+
+function updateMapSelection(depId, deptData) {
+  d3.selectAll("path.map-dept").each(function(f) {
+    const raw   = getGeoFeatureName(f);
+    const norm  = normDepName(raw);
+    const fId   = DEPT_GEO_MAP[norm];
+    const dom   = fId && deptData[fId] ? deptData[fId].dominantCan : null;
+    const selDom = depId && deptData[depId] ? deptData[depId].dominantCan : null;
+    const highlight = selDom && dom === selDom;
+    d3.select(this)
+      .attr("fill-opacity", depId === null ? 0.78 : (highlight ? 1 : 0.22))
+      .attr("stroke", highlight ? "#1E293B" : "#FFFFFF")
+      .attr("stroke-width", highlight ? 2 : 0.6);
+  });
+}
+
+function showMapTooltip(ev, feature, deptData) {
+  const raw   = getGeoFeatureName(feature);
+  const norm  = normDepName(raw);
+  const depId = DEPT_GEO_MAP[norm];
+  const d     = depId && deptData[depId];
+  if (!d) {
+    const tt = document.getElementById("tooltip");
+    tt.innerHTML = `<strong>${raw}</strong><div class="tt-row"><span>Sin datos electorales</span></div>`;
+    tt.classList.add("visible"); moveTooltip(ev); return;
+  }
+  const sorted = Object.entries(d.votes).sort((a, b) => b[1] - a[1]);
+  const rows   = sorted.map(([cId, pct]) => {
+    const col  = CANDIDATE_COLORS[cId] || "#888";
+    const name = CANDIDATE_NAMES[cId]  || cId;
+    const bar  = Math.round(pct / 100 * 80);
+    return `<div class="tt-row">
+      <span style="color:${col};font-weight:700">${name}</span>
+      <span class="tt-val" style="color:${col}">${pct.toFixed(1)}%</span>
+    </div>
+    <div style="height:4px;background:#E2E8F0;border-radius:2px;margin:-4px 0 4px">
+      <div style="width:${bar}px;max-width:100%;height:100%;background:${col};border-radius:2px;opacity:.8"></div>
+    </div>`;
+  }).join("");
+  const tt = document.getElementById("tooltip");
+  tt.innerHTML = `
+    <strong>${d.node.nombre}</strong>
+    <div class="tt-row"><span>Subregión</span>
+      <span class="tt-val" style="color:${SUBREGION_COLORS[d.region]||'#888'}">${d.region}</span></div>
+    <div class="tt-row"><span>Censo</span><span class="tt-val">${Number(d.node.atributo_1||0).toLocaleString("es-CO")}</span></div>
+    <div style="margin-top:6px;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:4px">% Votos por candidato</div>
+    ${rows}`;
+  tt.classList.add("visible"); moveTooltip(ev);
+}
+
 // ══════ CAMBIO DE VISTAS ═════════════════════════════════════════
 function switchView(view){
   state.view=view;
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
-  document.getElementById("main-view").style.display   =view==="main"   ?"block":"none";
-  document.getElementById("franja-view").style.display =view==="franja" ?"flex" :"none";
-  document.getElementById("compare-view").style.display=view==="compare"?"flex" :"none";
+  document.getElementById("main-view").style.display    = view==="main"   ? "block" : "none";
+  document.getElementById("franja-view").style.display  = view==="franja" ? "flex"  : "none";
+  document.getElementById("mapa-view").style.display    = view==="mapa"   ? "flex"  : "none";
+  document.getElementById("compare-view").style.display = view==="compare"? "flex"  : "none";
   const fc=document.getElementById("franja-controls");
   if(fc) fc.style.display=view==="franja"?"block":"none";
   if(view==="franja")  loadFranja();
   if(view==="compare") loadCompare();
+  if(view==="mapa")    loadMapaColombia();
 }
 
 function showLoading(show){

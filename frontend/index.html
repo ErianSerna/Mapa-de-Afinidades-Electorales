@@ -25,6 +25,7 @@
     <div class="view-tabs">
       <button class="tab-btn active" data-view="main">Red completa</button>
       <button class="tab-btn" data-view="franja">Por franja</button>
+      <button class="tab-btn" data-view="mapa">Mapa Colombia</button>
       <button class="tab-btn" data-view="compare">Comparar configs</button>
     </div>
 
@@ -159,7 +160,7 @@
         <div class="legend-item"><div class="legend-circle" style="background:#003893;border-radius:2px;width:16px;height:4px"></div><span>Voto / Departamento</span></div>
         <div class="legend-item"><div class="legend-circle" style="background:#64748B;border-radius:2px;width:16px;height:4px"></div><span>Cobertura mediática</span></div>
         <div class="legend-item"><div class="legend-circle" style="background:#CE1126;border-radius:2px;width:16px;height:4px"></div><span>Afinidad demográfica</span></div>
-        <div class="legend-item"><div class="legend-circle" style="background:#94A3B8;border-radius:2px;width:16px;height:4px"></div><span>Alcance regional</span></div>
+        <div class="legend-item"><div class="legend-circle" style="background:#FCD116;border-radius:2px;width:16px;height:4px"></div><span>Alcance regional</span></div>
       </div>
     </div>
 
@@ -197,6 +198,20 @@
             style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;line-height:1">✕</button>
         </div>
         <div id="franja-bars"></div>
+      </div>
+    </div>
+
+    <!-- Vista Mapa Colombia -->
+    <div id="mapa-view" style="display:none;width:100%;height:100%;flex-direction:column;position:relative">
+      <div id="mapa-canvas" style="width:100%;flex:1;min-height:0;height:100%"></div>
+      <!-- Panel inferior: afinidad por subregión -->
+      <div id="mapa-subregion-bar" style="
+        flex-shrink:0;display:flex;flex-wrap:wrap;gap:6px;
+        padding:8px 14px;background:var(--bg-panel);
+        border-top:2px solid var(--border);font-size:11px;
+        font-family:'Space Mono',monospace;">
+        <span style="color:var(--text-dim);align-self:center;text-transform:uppercase;letter-spacing:.06em;font-size:9px;margin-right:4px">Afinidad subregional →</span>
+        <div id="mapa-subregion-chips"></div>
       </div>
     </div>
 
@@ -335,6 +350,7 @@ function applyFilters() {
   if (view === 'main')    loadAndRender();
   if (view === 'franja')  loadFranja();
   if (view === 'compare') loadCompare();
+  if (view === 'mapa')    { _mapaCache = null; loadMapaColombia(); }
 }
 
 // Muestra/oculta controles de franja según la vista
