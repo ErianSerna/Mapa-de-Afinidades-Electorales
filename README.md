@@ -4,9 +4,9 @@
 ---
 
 ## Tabla de contenidos
-1. [Arquitectura del proyecto](#arquitectura)
+1. ➡️🎯[Instalación y ejecución](#instalacion)🎯⬅️ 
 2. [Estructura de carpetas](#estructura)
-3. [Instalación y ejecución](#instalacion)
+3. [Arquitectura del proyecto](#arquitectura)
 4. [Endpoints de la API](#api)
 5. [Cómo conecta el frontend con el backend](#conexion)
 6. [Decisiones de modelado del grafo](#modelado)
@@ -16,8 +16,73 @@
 10. [Tecnologías usadas](#tecnologias)
 
 ---
+## 1. Instalación y ejecución <a name="instalacion"></a>
 
-## 1. Arquitectura del proyecto <a name="arquitectura"></a>
+### Requisitos
+- Python 3.9+
+- pip
+
+### Pasos
+
+```bash
+# 1. Clonar / descomprimir el proyecto
+cd electoral2a
+
+# 2. Instalar dependencias
+pip install -r requirements.txt
+
+# 3. Ejecutar el servidor
+python app.py
+
+# 4. Abrir en el navegador
+# http://localhost:5000
+
+# 5. O en su defecto, entrar al siguiente link y esperar a que cargue el servicio (tiempo promedio de carga 1 minuto)
+# https://mapa-de-afinidades-electorales.onrender.com
+
+```
+
+**Separación de responsabilidades (Single Responsibility Principle):**
+
+| Capa | Archivo | Responsabilidad |
+|------|---------|-----------------|
+| Datos | `data/*.csv` | Fuente de verdad — nunca se modifica |
+| Motor | `backend/graph_engine.py` | Lógica de grafos pura (sin HTTP) |
+| API | `backend/routes/graph_routes.py` | Traducir HTTP ↔ motor |
+| Servidor | `app.py` | Arrancar Flask, registrar blueprints |
+| Vista | `frontend/index.html` | Estructura HTML declarativa |
+| Estilos | `frontend/css/style.css` | Visual — sin lógica |
+| Interacción | `frontend/js/script.js` | fetch + D3 — sin lógica de negocio |
+
+---
+
+## 2. Estructura de carpetas <a name="estructura"></a>
+
+```
+Mapa-de-Afinidades-Electorales/
+│
+├── app.py                        ← Punto de entrada Flask
+├── requirements.txt              ← Dependencias Python
+│
+├── backend/
+│   ├── __init__.py
+│   ├── graph_engine.py           ← Lógica de grafos (NetworkX + Louvain)
+│   └── routes/
+│       ├── __init__.py
+│       └── graph_routes.py       ← Endpoints REST
+│
+├── frontend/
+│   ├── index.html                ← SPA (Single Page Application)
+│   ├── css/
+│   │   └── style.css             ← Estilos (sin datos hardcodeados)
+│   └── js/
+│       └── script.js             ← D3.js + fetch API
+│
+└── data/
+    ├── electoral_nodos.csv       ← 60 nodos (candidatos, dptos, franjas, medios)
+    └── electoral_aristas.csv     ← 404 aristas con pesos
+```
+## 3. Arquitectura del proyecto <a name="arquitectura"></a>
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -49,71 +114,6 @@
 │  data/electoral_nodos.csv                               │
 │  data/electoral_aristas.csv                             │
 └─────────────────────────────────────────────────────────┘
-```
-
-**Separación de responsabilidades (Single Responsibility Principle):**
-
-| Capa | Archivo | Responsabilidad |
-|------|---------|-----------------|
-| Datos | `data/*.csv` | Fuente de verdad — nunca se modifica |
-| Motor | `backend/graph_engine.py` | Lógica de grafos pura (sin HTTP) |
-| API | `backend/routes/graph_routes.py` | Traducir HTTP ↔ motor |
-| Servidor | `app.py` | Arrancar Flask, registrar blueprints |
-| Vista | `frontend/index.html` | Estructura HTML declarativa |
-| Estilos | `frontend/css/style.css` | Visual — sin lógica |
-| Interacción | `frontend/js/script.js` | fetch + D3 — sin lógica de negocio |
-
----
-
-## 2. Estructura de carpetas <a name="estructura"></a>
-
-```
-electoral2a/
-│
-├── app.py                        ← Punto de entrada Flask
-├── requirements.txt              ← Dependencias Python
-│
-├── backend/
-│   ├── __init__.py
-│   ├── graph_engine.py           ← Lógica de grafos (NetworkX + Louvain)
-│   └── routes/
-│       ├── __init__.py
-│       └── graph_routes.py       ← Endpoints REST
-│
-├── frontend/
-│   ├── index.html                ← SPA (Single Page Application)
-│   ├── css/
-│   │   └── style.css             ← Estilos (sin datos hardcodeados)
-│   └── js/
-│       └── script.js             ← D3.js + fetch API
-│
-└── data/
-    ├── electoral_nodos.csv       ← 60 nodos (candidatos, dptos, franjas, medios)
-    └── electoral_aristas.csv     ← 404 aristas con pesos
-```
-
----
-
-## 3. Instalación y ejecución <a name="instalacion"></a>
-
-### Requisitos
-- Python 3.9+
-- pip
-
-### Pasos
-
-```bash
-# 1. Clonar / descomprimir el proyecto
-cd electoral2a
-
-# 2. Instalar dependencias
-pip install -r requirements.txt
-
-# 3. Ejecutar el servidor
-python app.py
-
-# 4. Abrir en el navegador
-# http://localhost:5000
 ```
 
 El servidor Flask sirve tanto la API como el frontend estático desde la misma URL.
@@ -165,9 +165,6 @@ Lista los N nodos con mayor betweenness centrality (nodos puente).
 
 ### `GET /api/franja?subtipo=edad&resolution=1.0`
 Subgrafo filtrado por tipo de franja demográfica (edad / estrato / educacion / ruralidad).
-
-### `GET /api/compare?res_a=0.7&res_b=1.4&tipos_a=...&tipos_b=...`
-Ejecuta el análisis con dos configuraciones y devuelve ambos resultados para comparación.
 
 ---
 
@@ -251,18 +248,18 @@ Un Q cercano a 1 indica partición de alta calidad. El dataset obtiene Q ≈ 0.2
 
 ## 8. Retos innovadores implementados <a name="retos"></a>
 
-### ✅ Reto 1 — Análisis de puentes (`/api/bridges`)
+###  Reto 1 — Análisis de puentes (`/api/bridges`)
 - Calcula **betweenness centrality** para todos los nodos.
 - Identifica los N nodos que conectan comunidades distintas.
 - El panel derecho muestra el ranking con porcentaje de intermediación.
 - En el grafo, el **tamaño del nodo es proporcional al betweenness** — los puentes se ven grandes.
 
-### ✅ Reto 2 — Evolución por franja demográfica (`/api/franja`)
+###  Reto 2 — Evolución por franja demográfica (`/api/franja`)
 - Tab "Por franja": construye un **subgrafo solo con franjas del tipo elegido + candidatos**.
 - Selector dinámico de subtipo: edad, estrato, educación, ruralidad, etnia.
 - Permite comparar visualmente si la partición cambia según el criterio demográfico.
 
-### ✅ Reto 3 — Comparación de configuraciones (`/api/compare`)
+###  Reto 3 — Comparación de configuraciones (`/api/compare`)
 - Tab "Comparar configs": renderiza **dos grafos lado a lado**.
 - Config A: solo votos (resolución baja → menos comunidades).
 - Config B: todos los tipos de arista (resolución alta → más comunidades).
@@ -278,7 +275,7 @@ Un Q cercano a 1 indica partición de alta calidad. El dataset obtiene Q ≈ 0.2
 | ¿Coinciden los grupos con regiones geográficas? | El atributo `region` visible en el tooltip + color de comunidad |
 | ¿Qué medios comparten ecosistema con qué candidatos? | Nodos `medio` y `candidato` en la misma comunidad |
 | ¿Qué franja es más homogénea? | Tab "Por franja" — la franja con mayor modularidad es la más homogénea |
-| ¿Qué tan pronunciada es la separación? | Métrica **Modularidad** en el panel de métricas |
+| ¿Qué tan pronunciada es la separación? | Métrica **Densidad** en el panel de métricas |
 
 ---
 
@@ -294,7 +291,7 @@ Un Q cercano a 1 indica partición de alta calidad. El dataset obtiene Q ≈ 0.2
 | Visualización | D3.js | 7.8 |
 | HTTP | fetch API (nativa) | — |
 | CORS | flask-cors | 4.0 |
-
+| gunicorn | 21.2.0 |
 ---
 
 ## Notas de desarrollo
