@@ -26,7 +26,7 @@
 
 ```bash
 # 1. Clonar / descomprimir el proyecto
-cd electoral2a
+cd Mapa-de-Afinidades-Electorales-main
 
 # 2. Instalar dependencias
 pip install -r requirements.txt
@@ -59,7 +59,7 @@ python app.py
 ## 2. Estructura de carpetas <a name="estructura"></a>
 
 ```
-Mapa-de-Afinidades-Electorales/
+Mapa-de-Afinidades-Electorales-main/
 │
 ├── app.py                        ← Punto de entrada Flask
 ├── requirements.txt              ← Dependencias Python
