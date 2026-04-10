@@ -1,6 +1,6 @@
 # 🗺️ Mapa de Afinidades Electorales — Colombia 2026
 ### Ejercicio 2A · Taller de Grafos · Matemáticas para la Informática Avanzada
-
+### Link repositorio GitHub: https://github.com/ErianSerna/Mapa-de-Afinidades-Electorales
 ---
 
 ## Tabla de contenidos
