@@ -357,7 +357,7 @@ select {
   padding: 4px 10px;
   font-family: 'Space Mono', monospace;
   font-size: 10px;
-  color: var(--col-amarillo);
+  color: var(--col-azul);
   z-index: 10;
 }
 
